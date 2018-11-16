@@ -1,0 +1,5 @@
+print x;
+if true then print 3;
+z;
+2;
+"hello";

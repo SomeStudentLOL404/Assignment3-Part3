@@ -1,0 +1,11 @@
+x < 10;
+
+7 > 9;
+
+true == false;
+
+false != false;
+
+y <= "message";
+
+x >= 1000;

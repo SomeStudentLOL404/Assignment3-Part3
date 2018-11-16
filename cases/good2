@@ -1,0 +1,9 @@
+if (true) then bacon;
+
+print "help me rhonda, help help me rhonda";
+
+print false;
+
+print bacon;
+
+if bacon then if y then z;

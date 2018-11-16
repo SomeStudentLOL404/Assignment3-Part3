@@ -1,0 +1,6 @@
+y = 3;
+z = 20;
+
+fooBar = "foo bar. what is it with this foo bar stuff";
+
+y = 2 + (3 * "all right ";)

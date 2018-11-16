@@ -1,0 +1,7 @@
+hello + clarice;
+
+print 3 + 4 && 7;
+
+print true + true;
+
+print;

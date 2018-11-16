@@ -1,0 +1,7 @@
+a = b = c = 10;
+
+a = 3 + 7 * 4;
+
+panAt = never*2 + " " + land;
+
+x = true || false;
