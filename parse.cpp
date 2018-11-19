@@ -63,12 +63,17 @@ ParseTree *Prog(istream *in, int *line)
 // Slist is a Statement followed by a Statement List
 ParseTree *Slist(istream *in, int *line)
 {
+    
     // cout << "Do we Get to SList???" << endl;
     ParseTree *s = Stmt(in, line);
     if( s == 0 )
         return 0;
-
-    if( Parser::GetNextToken(in, line) != SC ) {
+    
+    Token a = Parser::GetNextToken(in, line);
+    
+    if(a != SC ) {
+        Parser::PushBackToken(a);
+      //  cout << "Value of token is: " << a << " - at line nunber: " << *line << endl;
         ParseError(*line, "Missing semicolon");
         return 0;
     }
@@ -116,11 +121,6 @@ ParseTree *Stmt(istream *in, int *line) {
 
 ParseTree *IfStmt(istream *in, int *line)
 {
-    /*
-     * IfStmt Grammar Rule:
-     * IfStmt := IF Expr THEN Stmt
-     */
-    //cout << "Do We Get To IfStmt??" << endl;
 
     ParseTree *t5 = Expr(in, line);
     if (t5 == 0) {
@@ -129,6 +129,7 @@ ParseTree *IfStmt(istream *in, int *line)
     }
     Token t = Parser::GetNextToken(in, line);
     if(t.GetTokenType() != THEN ) {
+        Parser::PushBackToken(t);
         ParseError(*line, "Error at IfStmt - 2");
         return 0;
     }
@@ -140,13 +141,6 @@ ParseTree *IfStmt(istream *in, int *line)
 
 ParseTree *PrintStmt(istream *in, int *line)
 {
-    /*
-     * PrintStmt Grammar Rule:
-     * PrintStmt := PRINT Expr
-     */
-    //Create new ParseTree for *PrintStmt
-    // cout << "Do We Get To PrintStmt??" << endl;
-
     ParseTree *t2 = Expr(in, line);
     if(t2 == 0) {
         ParseError(*line, "Error at PrintStmt - 1");
@@ -157,11 +151,7 @@ ParseTree *PrintStmt(istream *in, int *line)
 
 ParseTree *Expr(istream *in, int *line)
 {
-    /*
-     * Expr Grammar Rule:
-     * Expr := LogicExpr { ASSIGN LogicExpr }
-     */
-    //cout << "Do we Get to Expr???" << endl;
+  
 
     ParseTree *t1 = LogicExpr(in, line);
     if( t1 == 0 ) {
@@ -185,26 +175,21 @@ ParseTree *Expr(istream *in, int *line)
 
 ParseTree *LogicExpr(istream *in, int *line)
 {
-    /*
-     * LogicExpr Grammar Rule:
-     * LogicExpr := CompareExpr { (LOGICAND | LOGICOR) CompareExpr }
-     */
-    //cout << "Do we Get to LogicExpr??" << endl;
-
-
     ParseTree *t1 = CompareExpr(in, line);
     if( t1 == 0 ) {
         ParseError(*line, "Error at Logic Expression - t1");
         return 0;
     }
-
+    while(true)
+    {
+        
     Token t = Parser::GetNextToken(in, line);
     if(t.GetTokenType() != LOGICAND && t.GetTokenType() != LOGICOR)
     {
         Parser::PushBackToken(t);
         return t1;
     }
-
+    
     ParseTree *t2 = CompareExpr(in, line);
     if(t2 == 0)
     {
@@ -212,20 +197,15 @@ ParseTree *LogicExpr(istream *in, int *line)
         return 0;
     }
 
-
-    //LogicAndExpr(int line, ParseTree *l, ParseTree *r) : ParseTree(line,l,r) {}
     if( t == LOGICAND )
         t1 = new LogicAndExpr(t.GetLinenum(), t1, t2);
     else if (t == LOGICOR)
         t1 = new LogicOrExpr(t.GetLinenum(), t1, t2);
 
-    return t1;
+    }
 }
 
 ParseTree *CompareExpr(istream *in, int *line) {
-
-    //cout << "Do We Get To CompareExpr??" << endl;
-
     ParseTree *t1 = AddExpr(in, line);
     if( t1 == 0 )
     {
@@ -234,11 +214,16 @@ ParseTree *CompareExpr(istream *in, int *line) {
     }
 
     Token t = Parser::GetNextToken(in, line);
-    if(t.GetTokenType() != EQ && t.GetTokenType() != NEQ && t.GetTokenType() != GT && t.GetTokenType() != LT && t.GetTokenType() != LEQ)
+    
+    //cout << "Value of T is: " << t << endl;
+   
+    if(t.GetTokenType() != EQ && t.GetTokenType() != NEQ && t.GetTokenType() != GT && t.GetTokenType() != LT && t.GetTokenType() != LEQ && t.GetTokenType() != GEQ)
     {
+    
         Parser::PushBackToken(t);
         return t1;
     }
+   
     ParseTree *t2 = CompareExpr(in, line);
     if( t2 == 0 )
     {
@@ -246,12 +231,6 @@ ParseTree *CompareExpr(istream *in, int *line) {
         return 0;
     }
 
-    //if we have a token listed above, look for the second factor, and pass it into __Expr
-    //t2 would be the second factor
-    //the mult follows a similar pattern
-    //boop on discord
-
-    //Do Checks
     if( t == EQ )
     {
         return new EqExpr(t.GetLinenum(), t1, t2);
@@ -266,6 +245,7 @@ ParseTree *CompareExpr(istream *in, int *line) {
     }
     else if (t == GEQ)
     {
+        //cout << "At GEQ: " << t << endl;
         return new GEqExpr(t.GetLinenum(), t1, t2);
     }
     else if (t == LT)
@@ -274,6 +254,7 @@ ParseTree *CompareExpr(istream *in, int *line) {
     }
     else if (t == LEQ)
     {
+       // cout << "Value of t: " << t << endl;
         return new LEqExpr(t.GetLinenum(), t1, t2);
     }
     else
@@ -296,7 +277,9 @@ ParseTree *AddExpr(istream *in, int *line)
         return 0;
     }
 
-    while ( true ) {
+    while ( true )
+    {
+       
         Token t = Parser::GetNextToken(in, line);
         if( t != PLUS && t != MINUS ) {
             Parser::PushBackToken(t);
@@ -311,7 +294,10 @@ ParseTree *AddExpr(istream *in, int *line)
             t1 = new PlusExpr(t.GetLinenum(), t1, t2);
         else
             t1 = new MinusExpr(t.GetLinenum(), t1, t2);
+        
     }
+    
+    
 }
 
 ParseTree *MulExpr(istream *in, int *line)
@@ -324,7 +310,9 @@ ParseTree *MulExpr(istream *in, int *line)
         ParseError(*line, "Error at MulExpr - 1");
         return 0;
     }
-
+    
+while(true)
+{
     Token t = Parser::GetNextToken(in, line);
     if(t.GetTokenType() != STAR && t.GetTokenType() != SLASH)
     {
@@ -332,23 +320,22 @@ ParseTree *MulExpr(istream *in, int *line)
         return t1;
     }
     ParseTree *t2 = Factor(in, line);
-    if(t2 == 0)
+    if(t2 == 0) 
     {
+        ParseError(*line, "Error at MulExpress - 2");
         return 0;
     }
     if( t == STAR )
     {
         return new TimesExpr(t.GetLinenum(), t1, t2);
     }
-    else if( t == SLASH )
+    // else ( t == SLASH )
+    else
     {
         return new TimesExpr(t.GetLinenum(), t1, t2);
     }
         //Check back
-    else
-    {
-        return 0;
-    }
+}  
 
 }
 
@@ -383,37 +370,31 @@ ParseTree *Factor(istream *in, int *line)
 
 ParseTree *Primary(istream *in, int *line)
 {
-    // PROCESS TOKEN, IDENTIFY PRIMARY, RETURN SOMETHING
-    /*
-     * Primary Grammar Rule:
-     * Primary := IDENT | ICONST | SCONST | TRUE | FALSE | LPAREN Expr
-     */
-    // cout << "Do we Get to Primary???" << endl;
-
     Token t = Parser::GetNextToken(in, line);
+    //cout << "T in Primary is: " << t << endl;
     if(t.GetTokenType() == IDENT)
     {
-
-        mapv[t.GetLexeme()]++;
+        mapv[t.GetLexeme()]++;        
         return new Ident(t);
     }
-    else if(t.GetTokenType() == ICONST)
+     if(t.GetTokenType() == ICONST)
     {
+        //cout << "ICONST value is: " << t << endl;
         return new IConst(t);
     }
-    else if(t.GetTokenType() == SCONST)
+     if(t.GetTokenType() == SCONST)
     {
         return new SConst(t);
     }
-    else if(t.GetTokenType() == TRUE)
+     if(t.GetTokenType() == TRUE)
     {
         return new BoolConst(t, TRUE);
     }
-    else if(t.GetTokenType() == FALSE)
+    if(t.GetTokenType() == FALSE)
     {
         return new BoolConst(t, FALSE);
     }
-    else if(t.GetTokenType() == LPAREN)
+     if(t.GetTokenType() == LPAREN)
     {
         ParseTree *t1 = Expr(in, line);
         Token t = Parser::GetNextToken(in, line);
@@ -426,6 +407,7 @@ ParseTree *Primary(istream *in, int *line)
         }
         else if(t.GetTokenType() != RPAREN)
         {
+            Parser::PushBackToken(t);
             ParseError(*line, "Error at Primary -  LPAREN - 2");
             return 0;
         }
